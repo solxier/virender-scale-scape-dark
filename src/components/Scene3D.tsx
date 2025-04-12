@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import * as THREE from 'three';
 import { SpringValue } from "@react-spring/core";
 
-// Type definitions to fix the typescript errors
+// Type definitions for our components
 interface FloatingCubeProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
@@ -23,18 +23,18 @@ interface FloatingSphereProps {
 }
 
 interface AnimatedValues {
-  y: SpringValue<number>;
+  positionY: number;
 }
 
 // Create a simple primitive that won't cause errors
 const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingCubeProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
-  // Use separate values instead of array for spring animation
-  const { y } = useSpring<AnimatedValues>({
+  // Use a simpler approach for animation to avoid property conflicts
+  const { positionY } = useSpring<AnimatedValues>({
     loop: { reverse: true },
-    from: { y: position[1] - 0.2 },
-    to: { y: position[1] + 0.2 },
+    from: { positionY: position[1] - 0.2 },
+    to: { positionY: position[1] + 0.2 },
     config: {
       mass: 1,
       tension: 50,
@@ -45,12 +45,8 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
   return (
     <animated.mesh 
       ref={meshRef}
-      position-x={position[0]}
-      position-y={y}
-      position-z={position[2]}
-      rotation-x={rotation[0]}
-      rotation-y={rotation[1]}
-      rotation-z={rotation[2]}
+      position={[position[0], positionY, position[2]]}
+      rotation={[rotation[0], rotation[1], rotation[2]]}
       scale={scale}
     >
       <boxGeometry args={[1, 1, 1]} />
@@ -62,11 +58,11 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
 const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingSphereProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
-  // Use separate values instead of array
-  const { y } = useSpring<AnimatedValues>({
+  // Simplify animation logic
+  const { positionY } = useSpring<AnimatedValues>({
     loop: { reverse: true },
-    from: { y: position[1] - 0.2 },
-    to: { y: position[1] + 0.2 },
+    from: { positionY: position[1] - 0.2 },
+    to: { positionY: position[1] + 0.2 },
     config: {
       mass: 1,
       tension: 40,
@@ -77,12 +73,10 @@ const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: 
   return (
     <animated.mesh 
       ref={meshRef}
-      position-x={position[0]}
-      position-y={y}
-      position-z={position[2]}
+      position={[position[0], positionY, position[2]]}
       scale={scale}
     >
-      <sphereGeometry args={[1, 12, 12]} />
+      <sphereGeometry args={[1, 8, 8]} /> {/* Reduced geometry complexity for better performance */}
       <meshStandardMaterial color={color} metalness={0.6} roughness={0.2} />
     </animated.mesh>
   );
@@ -106,7 +100,7 @@ const SceneContent = ({ scrollProgress = 0 }: SceneContentProps) => {
         <FloatingSphere position={[2, 2, -2]} scale={0.6} color="#8860ff" />
       </group>
 
-      <Stars radius={50} depth={50} count={300} factor={4} fade />
+      <Stars radius={50} depth={50} count={200} factor={4} fade />
       <OrbitControls 
         enableZoom={false}
         enablePan={false}
@@ -133,14 +127,15 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
       {isInView && (
         <Canvas 
           frameloop="demand" 
-          dpr={[1, 1.5]}
+          dpr={[1, 1.5]} 
           gl={{ 
             antialias: true,
             alpha: true,
             powerPreference: 'default',
-            localClippingEnabled: false,
             depth: true,
-            stencil: false
+            stencil: false,
+            // Removing problematic features
+            localClippingEnabled: false
           }}
           style={{
             background: 'transparent'

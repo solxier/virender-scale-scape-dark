@@ -1,5 +1,8 @@
+
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const NotFound = () => {
   const location = useLocation();
@@ -12,13 +15,33 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <a href="/" className="text-blue-500 hover:text-blue-700 underline">
-          Return to Home
-        </a>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="glass-morphism section-border p-8 md:p-12 text-center max-w-md">
+        <motion.h1 
+          className="text-6xl md:text-8xl font-bold text-gradient mb-4"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          404
+        </motion.h1>
+        <motion.p 
+          className="text-xl text-white/70 mb-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          Oops! This page has drifted into another dimension.
+        </motion.p>
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Link to="/" className="px-6 py-3 rounded-full bg-white text-black font-medium hover:bg-white/90 transition-colors">
+            Return Home
+          </Link>
+        </motion.div>
       </div>
     </div>
   );

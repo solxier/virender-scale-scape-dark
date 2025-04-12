@@ -6,13 +6,32 @@ import { useSpring, animated } from "@react-spring/three";
 import { useInView } from "framer-motion";
 import { cn } from "@/lib/utils";
 import * as THREE from 'three';
+import { SpringValue } from "@react-spring/core";
+
+// Type definitions to fix the typescript errors
+interface FloatingCubeProps {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+  color?: string;
+}
+
+interface FloatingSphereProps {
+  position?: [number, number, number];
+  scale?: number;
+  color?: string;
+}
+
+interface AnimatedValues {
+  y: SpringValue<number>;
+}
 
 // Create a simple primitive that won't cause errors
-const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }) => {
-  const meshRef = useRef(null);
+const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingCubeProps) => {
+  const meshRef = useRef<THREE.Mesh>(null);
   
   // Use separate values instead of array for spring animation
-  const { y } = useSpring({
+  const { y } = useSpring<AnimatedValues>({
     loop: { reverse: true },
     from: { y: position[1] - 0.2 },
     to: { y: position[1] + 0.2 },
@@ -40,11 +59,11 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
   );
 };
 
-const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }) => {
-  const meshRef = useRef(null);
+const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingSphereProps) => {
+  const meshRef = useRef<THREE.Mesh>(null);
   
   // Use separate values instead of array
-  const { y } = useSpring({
+  const { y } = useSpring<AnimatedValues>({
     loop: { reverse: true },
     from: { y: position[1] - 0.2 },
     to: { y: position[1] + 0.2 },
@@ -63,13 +82,17 @@ const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }) 
       position-z={position[2]}
       scale={scale}
     >
-      <sphereGeometry args={[1, 16, 16]} />
+      <sphereGeometry args={[1, 12, 12]} />
       <meshStandardMaterial color={color} metalness={0.6} roughness={0.2} />
     </animated.mesh>
   );
 };
 
-const SceneContent = ({ scrollProgress = 0 }) => {
+interface SceneContentProps {
+  scrollProgress?: number;
+}
+
+const SceneContent = ({ scrollProgress = 0 }: SceneContentProps) => {
   return (
     <>
       <ambientLight intensity={0.2} />
@@ -83,7 +106,7 @@ const SceneContent = ({ scrollProgress = 0 }) => {
         <FloatingSphere position={[2, 2, -2]} scale={0.6} color="#8860ff" />
       </group>
 
-      <Stars radius={50} depth={50} count={500} factor={4} fade />
+      <Stars radius={50} depth={50} count={300} factor={4} fade />
       <OrbitControls 
         enableZoom={false}
         enablePan={false}
@@ -110,11 +133,14 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
       {isInView && (
         <Canvas 
           frameloop="demand" 
-          dpr={[1, 2]}
+          dpr={[1, 1.5]}
           gl={{ 
             antialias: true,
             alpha: true,
-            powerPreference: 'default'
+            powerPreference: 'default',
+            localClippingEnabled: false,
+            depth: true,
+            stencil: false
           }}
           style={{
             background: 'transparent'

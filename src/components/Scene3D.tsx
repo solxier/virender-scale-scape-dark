@@ -1,9 +1,10 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useRef } from "react";
-import { OrbitControls, PerspectiveCamera, useGLTF, Environment, Stars } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, Stars } from "@react-three/drei";
 import { useSpring, animated } from "@react-spring/three";
 import { useInView } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }) => {
   const meshRef = useRef(null);
@@ -22,8 +23,8 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], springs.positionY, position[2]]}
-      rotation={rotation}
+      position={[position[0], springs.positionY as number, position[2]]}
+      rotation={rotation as [number, number, number]}
       scale={scale}
     >
       <boxGeometry args={[1, 1, 1]} />
@@ -49,7 +50,7 @@ const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }) 
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], springs.positionY, position[2]]}
+      position={[position[0], springs.positionY as number, position[2]]}
       scale={scale}
     >
       <sphereGeometry args={[1, 32, 32]} />
@@ -107,7 +108,5 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
     </div>
   );
 };
-
-import { cn } from "@/lib/utils";
 
 export default Scene3D;

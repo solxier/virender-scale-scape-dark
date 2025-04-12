@@ -1,8 +1,8 @@
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useRef, useMemo } from "react";
+import { Suspense, useRef } from "react";
 import { OrbitControls, Environment, Stars } from "@react-three/drei";
-import { useSpring, animated } from "@react-spring/three";
+import { useFrame } from "@react-three/fiber";
 import { useInView } from "framer-motion";
 import { cn } from "@/lib/utils";
 import * as THREE from 'three';
@@ -21,73 +21,60 @@ interface FloatingSphereProps {
   color?: string;
 }
 
-// Create a simple primitive that won't cause errors
+// Create a floating cube with manual animation
 const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingCubeProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const initialY = position[1];
   
-  // Create a simple animation for floating effect
-  const [spring, api] = useSpring(() => ({
-    position: [position[0], position[1], position[2]],
-    config: {
-      mass: 1,
-      tension: 50,
-      friction: 10,
-    },
-  }));
-  
-  // Update the position in a simple way without using complex properties
-  useMemo(() => {
-    api.start({
-      from: { position: [position[0], position[1] - 0.2, position[2]] },
-      to: { position: [position[0], position[1] + 0.2, position[2]] },
-      loop: { reverse: true },
-    });
-  }, [position, api]);
+  // Use useFrame for animation instead of react-spring
+  useFrame(({ clock }) => {
+    if (meshRef.current) {
+      // Simple floating animation using sine
+      meshRef.current.position.y = initialY + Math.sin(clock.getElapsedTime()) * 0.2;
+      // Gentle rotation
+      meshRef.current.rotation.x += 0.003;
+      meshRef.current.rotation.y += 0.002;
+    }
+  });
 
   return (
-    <animated.mesh 
+    <mesh 
       ref={meshRef}
-      position={spring.position}
+      position={position}
       rotation={rotation}
       scale={scale}
     >
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color={color} metalness={0.5} roughness={0.2} />
-    </animated.mesh>
+    </mesh>
   );
 };
 
+// Create a floating sphere with manual animation
 const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingSphereProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
+  const initialY = position[1];
   
-  // Create a simple animation for floating effect
-  const [spring, api] = useSpring(() => ({
-    position: [position[0], position[1], position[2]],
-    config: {
-      mass: 1,
-      tension: 40,
-      friction: 10,
-    },
-  }));
-  
-  // Update the position in a simple way
-  useMemo(() => {
-    api.start({
-      from: { position: [position[0], position[1] - 0.2, position[2]] },
-      to: { position: [position[0], position[1] + 0.2, position[2]] },
-      loop: { reverse: true },
-    });
-  }, [position, api]);
+  // Use useFrame for animation
+  useFrame(({ clock }) => {
+    if (meshRef.current) {
+      // Offset the sine wave slightly for spheres to create varied movement
+      meshRef.current.position.y = initialY + Math.sin(clock.getElapsedTime() + 1) * 0.2;
+      // Gentle rotation
+      meshRef.current.rotation.z += 0.001;
+      meshRef.current.rotation.y += 0.002;
+    }
+  });
 
   return (
-    <animated.mesh 
+    <mesh 
       ref={meshRef}
-      position={spring.position}
+      position={position}
       scale={scale}
     >
       <sphereGeometry args={[1, 16, 16]} />
       <meshStandardMaterial color={color} metalness={0.6} roughness={0.2} />
-    </animated.mesh>
+    </mesh>
   );
 };
 
@@ -96,13 +83,22 @@ interface SceneContentProps {
 }
 
 const SceneContent = ({ scrollProgress = 0 }: SceneContentProps) => {
+  const groupRef = useRef<THREE.Group>(null);
+  
+  // Rotate the entire scene based on scroll progress
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = scrollProgress * Math.PI * 2;
+    }
+  });
+
   return (
     <>
       <ambientLight intensity={0.2} />
       <pointLight position={[10, 10, 10]} intensity={1} />
       <pointLight position={[-10, -10, -10]} color="#8860ff" intensity={0.5} />
       
-      <group rotation={[0, scrollProgress * Math.PI * 2, 0]}>
+      <group ref={groupRef}>
         <FloatingCube position={[3, 0, 0]} color="#8860ff" />
         <FloatingSphere position={[-3, 1, 2]} scale={0.75} color="#ffffff" />
         <FloatingCube position={[0, -2, 1]} rotation={[Math.PI / 4, 0, Math.PI / 4]} color="#ffffff" scale={0.5} />
@@ -135,13 +131,12 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
     <div ref={ref} className={cn("w-full h-full", className)}>
       {isInView && (
         <Canvas 
-          frameloop="demand" 
+          frameloop="always" 
           dpr={[1, 1.5]} 
           gl={{ 
             antialias: true,
             alpha: true,
-            powerPreference: 'default',
-            depth: true,
+            powerPreference: 'default'
           }}
           style={{
             background: 'transparent'

@@ -22,15 +22,16 @@ interface FloatingSphereProps {
   color?: string;
 }
 
+// Define proper spring animation values
 interface AnimatedValues {
-  positionY: number;
+  positionY: SpringValue<number>;
 }
 
 // Create a simple primitive that won't cause errors
 const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingCubeProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
-  // Use a simpler approach for animation to avoid property conflicts
+  // Fix the spring animation using to-object notation
   const { positionY } = useSpring<AnimatedValues>({
     loop: { reverse: true },
     from: { positionY: position[1] - 0.2 },
@@ -45,8 +46,13 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], positionY, position[2]]}
-      rotation={[rotation[0], rotation[1], rotation[2]]}
+      // Use individual position and rotation props to avoid object spreading issues
+      position-x={position[0]}
+      position-y={positionY}
+      position-z={position[2]}
+      rotation-x={rotation[0]}
+      rotation-y={rotation[1]}
+      rotation-z={rotation[2]}
       scale={scale}
     >
       <boxGeometry args={[1, 1, 1]} />
@@ -58,7 +64,7 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
 const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: FloatingSphereProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   
-  // Simplify animation logic
+  // Fix the animation setup
   const { positionY } = useSpring<AnimatedValues>({
     loop: { reverse: true },
     from: { positionY: position[1] - 0.2 },
@@ -73,7 +79,10 @@ const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }: 
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], positionY, position[2]]}
+      // Use individual position props instead of array to avoid spread issues
+      position-x={position[0]}
+      position-y={positionY}
+      position-z={position[2]}
       scale={scale}
     >
       <sphereGeometry args={[1, 8, 8]} /> {/* Reduced geometry complexity for better performance */}
@@ -100,7 +109,7 @@ const SceneContent = ({ scrollProgress = 0 }: SceneContentProps) => {
         <FloatingSphere position={[2, 2, -2]} scale={0.6} color="#8860ff" />
       </group>
 
-      <Stars radius={50} depth={50} count={200} factor={4} fade />
+      <Stars radius={50} depth={50} count={150} factor={4} fade />
       <OrbitControls 
         enableZoom={false}
         enablePan={false}
@@ -131,18 +140,23 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
           gl={{ 
             antialias: true,
             alpha: true,
-            powerPreference: 'default',
+            powerPreference: 'high-performance',
             depth: true,
             stencil: false,
-            // Removing problematic features
-            localClippingEnabled: false
+            // Remove any problematic Three.js features
+            localClippingEnabled: false,
           }}
           style={{
             background: 'transparent'
           }}
+          camera={{
+            fov: 75,
+            near: 0.1,
+            far: 1000,
+            position: [0, 0, 10]
+          }}
         >
           <Suspense fallback={null}>
-            <PerspectiveCamera makeDefault position={[0, 0, 10]} />
             <SceneContent scrollProgress={scrollProgress} />
           </Suspense>
         </Canvas>

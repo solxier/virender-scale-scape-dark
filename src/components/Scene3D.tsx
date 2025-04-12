@@ -5,6 +5,7 @@ import { OrbitControls, PerspectiveCamera, Environment, Stars } from "@react-thr
 import { useSpring, animated } from "@react-spring/three";
 import { useInView } from "framer-motion";
 import { cn } from "@/lib/utils";
+import * as THREE from 'three';
 
 const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, color = "#ffffff" }) => {
   const meshRef = useRef(null);
@@ -23,8 +24,10 @@ const FloatingCube = ({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1, c
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], springs.positionY as number, position[2]]}
-      rotation={rotation as [number, number, number]}
+      position-x={position[0]}
+      position-y={springs.positionY}
+      position-z={position[2]}
+      rotation={rotation as any}
       scale={scale}
     >
       <boxGeometry args={[1, 1, 1]} />
@@ -50,7 +53,9 @@ const FloatingSphere = ({ position = [0, 0, 0], scale = 1, color = "#ffffff" }) 
   return (
     <animated.mesh 
       ref={meshRef}
-      position={[position[0], springs.positionY as number, position[2]]}
+      position-x={position[0]}
+      position-y={springs.positionY}
+      position-z={position[2]}
       scale={scale}
     >
       <sphereGeometry args={[1, 32, 32]} />
@@ -98,7 +103,7 @@ const Scene3D = ({ scrollProgress = 0, className }: Scene3DProps) => {
   return (
     <div ref={ref} className={cn("w-full h-full", className)}>
       {isInView && (
-        <Canvas>
+        <Canvas frameloop="demand">
           <Suspense fallback={null}>
             <PerspectiveCamera makeDefault position={[0, 0, 10]} />
             <SceneContent scrollProgress={scrollProgress} />
